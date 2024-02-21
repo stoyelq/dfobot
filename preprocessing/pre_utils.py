@@ -10,6 +10,7 @@ DATA_DIR = "/home/stoyelq/Documents/dfobot_data/preprocessing/"
 CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles/"
 TEST_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles_test/"
 AUGMENTED_DIR = "/home/stoyelq/Documents/dfobot_data/augmented/"
+IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/image_folder/"
 
 BUFFER_PX = 5
 AREA_THRESHOLD = 0.5
@@ -31,10 +32,22 @@ def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):
     except cv2.Error as e:
         print("Error {e}. Could not save {out_dir}".format(e=e, out_dir=out_dir))
 
+
+def get_age_from_name(img_name, gt_df):
+    fish_id = img_name.split("photo")[0][:-1].split(" ")[0]
+    fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
+    try:
+        fish_age = int(fish_data_row["annulus_count"].iloc[0])
+    except:
+        return None, None
+    return fish_age, fish_id
+
 def crop_and_isolate():
     # load images
     img_list = os.listdir(DATA_DIR)
     count = len(img_list)
+    gt_df = load_dmapps_report()
+
     for img_name in img_list:
         count += -1
         if count == 652:
@@ -44,9 +57,16 @@ def crop_and_isolate():
         if count % 100 == 0:
             print(count)
         if count < TEST_TRAIN_SPLIT * len(img_list):
-            out_dir = CROP_DIR
+            mode = "train"
         else:
-            out_dir = TEST_DIR
+            mode = "val"
+
+        fish_age, fish_id = get_age_from_name(img_name, gt_df)
+        if fish_age is None:
+            continue
+        photo_count = int(img_name.split("photo")[1][1]) if "photo" in img_name else 1
+        out_dir = f"{IMAGE_FOLDER_DIR}{mode}/{fish_age}/"
+
         img_path = DATA_DIR + img_name
         img = cv2.imread(img_path)
         if img is None:
@@ -63,14 +83,17 @@ def crop_and_isolate():
         cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
 
         # always save largest otolith/contour:
-        crop_and_save(img, cnts[0], out_dir=f"{out_dir}otolith_1_{img_name}", buffer=BUFFER_PX, outdim=OUT_DIM)
+
+        file_count = 2 * photo_count - 1
+        crop_and_save(img, cnts[0], out_dir=f"{out_dir}{fish_id}__{file_count}.jpg", buffer=BUFFER_PX, outdim=OUT_DIM)
         cv2.drawContours(img, [cnts[0]], -1, (36, 255, 12), 3)
 
         # grab second otolith if area is closish:
         first_area = cv2.contourArea(cnts[0])
         second_area = cv2.contourArea(cnts[1])
         if second_area > AREA_THRESHOLD * first_area:
-            crop_and_save(img, cnts[1], out_dir=f"{out_dir}otolith_2_{img_name}", buffer=BUFFER_PX, outdim=OUT_DIM)
+            file_count = 2 * photo_count
+            crop_and_save(img, cnts[1], out_dir=f"{out_dir}{fish_id}__{file_count}.jpg", buffer=BUFFER_PX, outdim=OUT_DIM)
 
 
         # visualization tool:
@@ -78,12 +101,6 @@ def crop_and_isolate():
         # cv2.imshow('image', img)
         # cv2.waitKey()
         # cv2.destroyAllWindows()
-
-
-def load_dmapps_report():
-    gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
-    gt_data = pd.read_csv(gt_file)
-    return gt_data
 
 
 def process_image(img):
@@ -110,27 +127,43 @@ def process_and_augment_image(img):
     return img_out
 
 
+def load_dmapps_report():
+    gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
+    gt_df = pd.read_csv(gt_file)
+    return gt_df
+
+
 def process_and_augment_images():
-    img_list = os.listdir(CROP_DIR)
+    for mode in ["train", "val"]:
+        if mode == "train":
+            img_dir = CROP_DIR
+        else:
+            img_dir = TEST_DIR
+    img_list = os.listdir(img_dir)
     count = len(img_list)
+    gt_df = load_dmapps_report()
     for img_name in img_list:
         count += -1
         if count % 100 == 0:
             print(count)
-        fish_id = img_name.split("photo")[0][-5:-1]
+        fish_id = img_name.split("photo")[0][10:].split("_")[0][:-1].split(" ")[0]
+        fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
+        fish_age = int(fish_data_row["annulus_count"].iloc[0])
+
         # make file names unique based on photo, otolith number
         oto_count = int(img_name.split("otolith")[1][1]) if "otolith" in img_name else 1
         photo_count = int(img_name.split("photo")[1][1]) if "photo" in img_name else 1
         fish_count = oto_count + 2 * photo_count - 2
+        out_dir = f"{AUGMENTED_DIR}{mode}/{fish_age}/"
 
-        img_path = CROP_DIR + img_name
+        img_path = img_dir + img_name
         img = Image.open(img_path)
         image_tensor = process_image(img)
-        torch.save(image_tensor, f"{AUGMENTED_DIR}{fish_id}__{fish_count}.pt")
+        torch.save(image_tensor, f"{out_dir}{fish_id}__{fish_count}.pt")
         augmented_img_1 = process_and_augment_image(img)
         augmented_img_2 = process_and_augment_image(img)
-        torch.save(augmented_img_1, f"{AUGMENTED_DIR}{fish_id}__{fish_count}_augmented_1.pt")
-        torch.save(augmented_img_2, f"{AUGMENTED_DIR}{fish_id}__{fish_count}_augmented_2.pt")
+        torch.save(augmented_img_1, f"{out_dir}{fish_id}__{fish_count}_augmented_1.pt")
+        torch.save(augmented_img_2, f"{out_dir}{fish_id}__{fish_count}_augmented_2.pt")
 
         # visulizers:
         # plt.imshow(augmented_img_1.permute(1, 2, 0))
