@@ -14,7 +14,7 @@ IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/image_folder/"
 
 BUFFER_PX = 5
 AREA_THRESHOLD = 0.5
-OUT_DIM = (512, 512)
+OUT_DIM = (800, 800)
 TEST_TRAIN_SPLIT = 0.90
 
 def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):
@@ -41,6 +41,7 @@ def get_age_from_name(img_name, gt_df):
     except:
         return None, None
     return fish_age, fish_id
+
 
 def crop_and_isolate():
     # load images
@@ -103,73 +104,7 @@ def crop_and_isolate():
         # cv2.destroyAllWindows()
 
 
-def process_image(img):
-    preprocess = transforms.Compose([
-        transforms.ToTensor(),
-        v2.ToDtype(torch.uint8, scale=True),
-        v2.Grayscale(1),
-        v2.ToDtype(torch.float32, scale=True),
-    ])
-
-    img_out = preprocess(img)
-    return img_out
-
-def process_and_augment_image(img):
-    preprocess = transforms.Compose([
-        transforms.ToTensor(),
-        v2.ToDtype(torch.uint8, scale=True),
-        v2.RandomRotation(180),
-        v2.Grayscale(1),
-        v2.ToDtype(torch.float32, scale=True),
-    ])
-
-    img_out = preprocess(img)
-    return img_out
-
-
 def load_dmapps_report():
     gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
     gt_df = pd.read_csv(gt_file)
     return gt_df
-
-
-def process_and_augment_images():
-    for mode in ["train", "val"]:
-        if mode == "train":
-            img_dir = CROP_DIR
-        else:
-            img_dir = TEST_DIR
-    img_list = os.listdir(img_dir)
-    count = len(img_list)
-    gt_df = load_dmapps_report()
-    for img_name in img_list:
-        count += -1
-        if count % 100 == 0:
-            print(count)
-        fish_id = img_name.split("photo")[0][10:].split("_")[0][:-1].split(" ")[0]
-        fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
-        fish_age = int(fish_data_row["annulus_count"].iloc[0])
-
-        # make file names unique based on photo, otolith number
-        oto_count = int(img_name.split("otolith")[1][1]) if "otolith" in img_name else 1
-        photo_count = int(img_name.split("photo")[1][1]) if "photo" in img_name else 1
-        fish_count = oto_count + 2 * photo_count - 2
-        out_dir = f"{AUGMENTED_DIR}{mode}/{fish_age}/"
-
-        img_path = img_dir + img_name
-        img = Image.open(img_path)
-        image_tensor = process_image(img)
-        torch.save(image_tensor, f"{out_dir}{fish_id}__{fish_count}.pt")
-        augmented_img_1 = process_and_augment_image(img)
-        augmented_img_2 = process_and_augment_image(img)
-        torch.save(augmented_img_1, f"{out_dir}{fish_id}__{fish_count}_augmented_1.pt")
-        torch.save(augmented_img_2, f"{out_dir}{fish_id}__{fish_count}_augmented_2.pt")
-
-        # visulizers:
-        # plt.imshow(augmented_img_1.permute(1, 2, 0))
-        # plt.show()
-        # plt.imshow(augmented_img_2.permute(1, 2, 0))
-        # plt.show()
-        # plt.imshow(image_tensor.permute(1, 2, 0))
-        # plt.show()
-
