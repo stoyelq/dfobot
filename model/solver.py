@@ -1,24 +1,16 @@
+import os
 import pickle
 import time
 
 import numpy as np
 import torch
 from matplotlib import pyplot as plt
-from torch import nn, optim
+from torch import nn, optim, distributed
 from torchvision import models
 
 from model.model_utils import get_dataloaders
 
 
-LEARNING_RATE = 0.005
-BATCH_SIZE = 10
-PRINT_EVERY = 10
-MAX_DATA = None # 150
-NUM_EPOCHS = 10
-LR_DECAY = None #0.5
-WEIGHT_DECAY = 0 #1e-4
-ACC_SAMPLES = 100
-ACC_VAL_SAMPLES = 1
 
 
 """
@@ -26,95 +18,14 @@ SHAMELESSLY copied and modified from the eecs-498-007 assignment code.
 """
 
 class Solver(object):
-    """
-    A Solver encapsulates all the logic necessary for training classification
-    models. The Solver performs stochastic gradient descent using different
-    update rules.
-    The solver accepts both training and validation data and labels so it can
-    periodically check classification accuracy on both training and validation
-    data to watch out for overfitting.
-    To train a model, you will first construct a Solver instance, passing the
-    model, dataset, and various options (learning rate, batch size, etc) to the
-    constructor. You will then call the train() method to run the optimization
-    procedure and train the model.
-    After the train() method returns, model.params will contain the parameters
-    that performed best on the validation set over the course of training.
-    In addition, the instance variable solver.loss_history will contain a list
-    of all losses encountered during training and the instance variables
-    solver.train_acc_history and solver.val_acc_history will be lists of the
-    accuracies of the model on the training and validation set at each epoch.
-    Example usage might look something like this:
-    data = {
-      'X_train': # training data
-      'y_train': # training labels
-      'X_val': # validation data
-      'y_val': # validation labels
-    }
-    model = MyAwesomeModel(hidden_size=100, reg=10)
-    solver = Solver(model, data,
-            lr_decay=0.95,
-            num_epochs=10, batch_size=100,
-            print_every=100,
-            device='cuda')
-    solver.train()
-    A Solver works on a model object that must conform to the following API:
-    - model.params must be a dictionary mapping string parameter names to torch
-      tensors containing parameter values.
-    - model.loss(X, y) must be a function that computes training-time loss and
-      gradients, and test-time classification scores, with the following inputs
-      and outputs:
-      Inputs:
-      - X: Array giving a minibatch of input data of shape (N, d_1, ..., d_k)
-      - y: Array of labels, of shape (N,) giving labels for X where y[i] is the
-      label for X[i].
-      Returns:
-      If y is None, run a test-time forward pass and return:
-      - scores: Array of shape (N, C) giving classification scores for X where
-      scores[i, c] gives the score of class c for X[i].
-      If y is not None, run a training time forward and backward pass and
-      return a tuple of:
-      - loss: Scalar giving the loss
-      - grads: Dictionary with the same keys as self.params mapping parameter
-      names to gradients of the loss with respect to those parameters.
-      - device: device to use for computation. 'cpu' or 'cuda'
-    """
-
-    def __init__(self, model, batch_size, criterion, optimizer, **kwargs):
-        """
-        Construct a new Solver instance.
-        Required arguments:
-        - model: A model object conforming to the API described above
-        - data: A dictionary of training and validation data containing:
-          'X_train': Array, shape (N_train, d_1, ..., d_k) of training images
-          'X_val': Array, shape (N_val, d_1, ..., d_k) of validation images
-          'y_train': Array, shape (N_train,) of labels for training images
-          'y_val': Array, shape (N_val,) of labels for validation images
-        Optional arguments:
-        - lr_decay: A scalar for learning rate decay; after each epoch the
-          learning rate is multiplied by this value.
-        - batch_size: Size of minibatches used to compute loss and gradient
-          during training.
-        - num_epochs: The number of epochs to run for during training.
-        - print_every: Integer; training losses will be printed every
-          print_every iterations.
-        - print_acc_every: We will print the accuracy every
-          print_acc_every epochs.
-        - verbose: Boolean; if set to false then no output will be printed
-          during training.
-        - num_train_samples: Number of training samples used to check training
-          accuracy; default is 1000; set to None to use entire training set.
-        - num_val_samples: Number of validation samples to use to check val
-          accuracy; default is None, which uses the entire validation set.
-        - checkpoint_name: If not None, then save model checkpoints here every
-          epoch.
-        """
+    def __init__(self, model, batch_size, criterion, optimizer, config_dict, **kwargs):
         self.device = kwargs.pop("device", "cuda")
         self.max_data = kwargs.pop("max_data", None)
 
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.loss_function = criterion
-        dataloaders, dataset_sizes, class_names = get_dataloaders(batch_size, self.max_data)
+        dataloaders, dataset_sizes, class_names = get_dataloaders(batch_size, self.max_data, config_dict=config_dict)
         self.batch_size = batch_size
         self.val_dataloader = dataloaders["val"]
         self.train_dataloader = dataloaders["train"]
@@ -122,7 +33,6 @@ class Solver(object):
         self.dataset_sizes = dataset_sizes
 
         # Unpack keyword arguments
-        self.lr_decay = kwargs.pop("lr_decay", 1.0)
         self.num_epochs = kwargs.pop("num_epochs", 10)
         self.num_train_samples = kwargs.pop("num_train_samples", self.max_data if self.max_data else 100)
         self.num_val_samples = kwargs.pop("num_val_samples", self.max_data if self.max_data else 100)
@@ -167,6 +77,7 @@ class Solver(object):
         loss = self.loss_function(output, labels)
         self.optimizer.zero_grad()
         loss.backward()
+
         self.loss_history.append(loss.item())
         self.optimizer.step()
 
@@ -176,7 +87,6 @@ class Solver(object):
             return
         checkpoint = {
             "model": self.model,
-            "lr_decay": self.lr_decay,
             "batch_size": self.batch_size,
             "best_params": self.best_params,
             "num_train_samples": self.num_train_samples,
@@ -193,7 +103,7 @@ class Solver(object):
             pickle.dump(checkpoint, f)
 
 
-    def check_accuracy(self, dataloader, num_samples=None):
+    def check_accuracy(self, dataloader, num_samples):
         """
         Check accuracy of the model on the provided data.
         Inputs:
@@ -208,6 +118,7 @@ class Solver(object):
         """
 
         # Compute predictions in batches
+        self.model.eval()
         num_batches = num_samples // self.batch_size
         if num_samples % self.batch_size != 0:
             num_batches += 1
@@ -227,7 +138,7 @@ class Solver(object):
         acc = (y_pred == y_true).to(torch.float).mean()
         return acc.item()
 
-    def train(self, time_limit=None, return_best_params=True):
+    def train(self, return_best_params=True):
         """
         Run optimization to train the model.
         """
@@ -239,25 +150,9 @@ class Solver(object):
         prev_time = start_time = time.time()
 
         for t in range(num_iterations):
-
             cur_time = time.time()
-            if (time_limit is not None) and (t > 0):
-                next_time = cur_time - prev_time
-                if cur_time - start_time + next_time > time_limit:
-                    print(
-                        "(Time %.2f sec; Iteration %d / %d) loss: %f"
-                        % (
-                            cur_time - start_time,
-                            t,
-                            num_iterations,
-                            self.loss_history[-1],
-                        )
-                    )
-                    print("End of training; next iteration "
-                          "will exceed the time limit.")
-                    break
             prev_time = cur_time
-
+            self.model.train()
             self._step()
 
             # Maybe print training loss
@@ -280,13 +175,10 @@ class Solver(object):
 
             # Check train and val accuracy on the first iteration, the last
             # iteration, and at the end of each epoch.
+            self.model.eval()
             with torch.no_grad():
                 first_it = t == 0
                 last_it = t == num_iterations - 1
-                if first_it:
-                    print(f"Learning rate: {LEARNING_RATE}")
-                    print(f"Batch size: {self.batch_size}")
-
                 if first_it or last_it or epoch_end:
                     train_acc = \
                         self.check_accuracy(self.train_dataloader,
@@ -344,16 +236,17 @@ def rand_jitter(arr):
     return arr + np.random.randn(len(arr)) * stdev
 
 
+def run_solver(device, plots=False, all_layers=False, config_dict=None, save_count=None):
+    for key, value in config_dict.items():
+        print(f"{key}: {value}")
 
-def run_solver(device):
-
-    _, _, class_names = get_dataloaders(batch_size=1)
+    _, _, class_names = get_dataloaders(batch_size=1, config_dict=config_dict)
 
     model_conv = models.resnet50(weights='IMAGENET1K_V2')
     model_conv.to(device)
-    # freeze inner layers:
+    # freeze inner layers, if called for:
     for param in model_conv.parameters():
-       param.requires_grad = False
+       param.requires_grad = all_layers
 
     # swap out final fc layer:
     num_ftrs = model_conv.fc.in_features
@@ -362,35 +255,58 @@ def run_solver(device):
     criterion = nn.CrossEntropyLoss()
 
     # all params:
-    # optimizer_ft = optim.Adam(model_conv.parameters(), lr=0.001)
+    if all_layers:
+        optimizer_ft = optim.Adam(model_conv.parameters(),
+                                  lr=config_dict["LEARNING_RATE"],
+                                  weight_decay=config_dict["WEIGHT_DECAY"])
     # just fc layer
-    optimizer_ft = optim.Adam(model_conv.fc.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
+    else:
+        optimizer_ft = optim.Adam(model_conv.fc.parameters(),
+                                  lr=config_dict["LEARNING_RATE"],
+                                  weight_decay=config_dict["WEIGHT_DECAY"])
 
     solver = Solver(model_conv,
-                    batch_size=BATCH_SIZE,
+                    batch_size=config_dict["BATCH_SIZE"],
                     criterion=criterion,
                     optimizer=optimizer_ft,
-                    print_every=PRINT_EVERY,
-                    num_epochs=NUM_EPOCHS,
-                    max_data=MAX_DATA,
-                    lr_decay=LR_DECAY,
-                    num_train_samples=ACC_SAMPLES,
-                    num_val_samples=ACC_VAL_SAMPLES,
+                    config_dict=config_dict,
+                    print_every=config_dict["PRINT_EVERY"],
+                    num_epochs=config_dict["NUM_EPOCHS"],
+                    max_data=config_dict["MAX_DATA"],
+                    num_train_samples=config_dict["ACC_SAMPLES"],
+                    num_val_samples=config_dict["ACC_VAL_SAMPLES"],
                     device=device,
                     )
 
     solver.train(return_best_params=False)
+    if save_count:
+        torch.save(solver, f"/home/stoyelq/Documents/dfobot_data/hyper_search/model_solver_{device.split(':')[-1]}_{save_count}.pt")
+    else:
+        torch.save(solver, f"/home/stoyelq/Documents/dfobot_data/model_solver_{device.split(':')[-1]}.pt")
 
+    if plots:
+        make_solver_plots(solver)
+    else:
+        make_solver_plots(solver, save_count=save_count)
+    return solver
+
+
+def make_solver_plots(solver, save_count=None):
     plt.plot(solver.loss_history, 'o')
     window_width = 20
     cumsum_vec = np.cumsum(np.insert(solver.loss_history, 0, 0))
     ma_vec = (cumsum_vec[window_width:] - cumsum_vec[:-window_width]) / window_width
     plt.plot(list(range(0, len(solver.loss_history) - window_width + 1)), ma_vec)
-    plt.show()
-
+    if save_count:
+        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/loss_{save_count}.png")
+    else:
+        plt.show()
 
     plt.plot(solver.train_acc_history)
     plt.plot(solver.val_acc_history)
-    plt.show()
-    solver.plot_solver_results(100)
-    torch.save(solver, "/home/stoyelq/Documents/dfobot_data/model_solver.pt")
+    if save_count:
+        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/acc_{save_count}.png")
+    else:
+        plt.show()
+    if save_count is None:
+        solver.plot_solver_results(100)

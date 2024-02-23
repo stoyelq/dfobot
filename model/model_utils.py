@@ -7,42 +7,14 @@ from torchvision.transforms import v2
 import torch
 
 
-IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/small_image_folder/"
-NUM_WORKERS = 4
-CROP_SIZE = (800, 800)
 
 
-def load_dmapps_report():
-    gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
-    gt_data = pd.read_csv(gt_file)
-    return gt_data
+def get_dataloaders(batch_size, max_size=None, config_dict=None):
+    NUM_WORKERS = config_dict['NUM_WORKERS']
+    CROP_SIZE = config_dict['CROP_SIZE']
+    VAL_CROP_SIZE = config_dict['VAL_CROP_SIZE']
+    IMAGE_FOLDER_DIR = config_dict['IMAGE_FOLDER_DIR']
 
-
-class my_subset(Dataset):
-    r"""
-    Subset of a dataset at specified indices.
-
-    Arguments:
-        dataset (Dataset): The whole Dataset
-        indices (sequence): Indices in the whole set selected for subset
-        labels(sequence) : targets as required for the indices. will be the same length as indices
-    """
-    def __init__(self, dataset, indices, labels):
-        self.dataset = dataset
-        self.indices = indices
-        labels_hold = torch.ones(len(dataset)).type(torch.long) * 300 #( some number not present in the #labels just to make sure
-        labels_hold[self.indices] = labels
-        self.labels = labels_hold
-    def __getitem__(self, idx):
-        image = self.dataset[self.indices[idx]][0]
-        label = self.labels[self.indices[idx]]
-        return (image, label)
-
-    def __len__(self):
-        return len(self.indices)
-
-
-def get_dataloaders(batch_size, max_size=None):
     data_transforms = {
         'train': transforms.Compose([
             transforms.ToTensor(),
@@ -50,12 +22,15 @@ def get_dataloaders(batch_size, max_size=None):
             v2.RandomRotation(180),
             v2.RandomResizedCrop(size=CROP_SIZE),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.34, 0.39, 0.38], std=[0.1, 0.1, 0.1]),
+            v2.Normalize(mean=[0.35, 0.39, 0.37], std=[0.1, 0.11, 0.11]),
+
         ]),
         'val': transforms.Compose([
             transforms.ToTensor(),
+            transforms.Resize(VAL_CROP_SIZE),
             v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize(mean=[0.34, 0.39, 0.38], std=[0.1, 0.1, 0.1]),
+            v2.Normalize(mean=[0.35, 0.39, 0.37], std=[0.1, 0.11, 0.11]),
+
         ]),
     }
 
@@ -69,7 +44,7 @@ def get_dataloaders(batch_size, max_size=None):
         image_datasets['val'] = torch.utils.data.Subset(image_datasets["val"], torch.arange(max_size))
 
     dataloaders = {
-        x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=True, num_workers=NUM_WORKERS)
+        x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batch_size, shuffle=True, num_workers=NUM_WORKERS, pin_memory=True)
         for x in ['train', 'val']}
 
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
