@@ -299,6 +299,7 @@ def make_solver_plots(solver, save_count=None):
     plt.plot(list(range(0, len(solver.loss_history) - window_width + 1)), ma_vec)
     if save_count:
         plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/loss_{save_count}.png")
+        plt.clf()
     else:
         plt.show()
 
@@ -306,6 +307,7 @@ def make_solver_plots(solver, save_count=None):
     plt.plot(solver.val_acc_history)
     if save_count:
         plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/acc_{save_count}.png")
+        plt.clf()
     else:
         plt.show()
     if save_count is None:
