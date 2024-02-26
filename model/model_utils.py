@@ -2,11 +2,39 @@ import os
 from torch.utils.data import Dataset
 
 import pandas as pd
+from PIL import Image
+from pathlib import Path
 from torchvision import transforms, datasets
 from torchvision.transforms import v2
 import torch
 
 
+class ImageFolderCustom(Dataset):
+
+    def __init__(self, targ_dir, transform=None):
+        self.paths = list(Path(targ_dir).rglob("*.jpg"))
+        self.transform = transform
+
+    @staticmethod
+    def get_value(path):
+        # make sure this function returns the label from the path
+        return torch.tensor(int(path.parent.name)).float()
+
+    def load_image(self, index):
+        image_path = self.paths[index]
+        return Image.open(image_path)
+
+    def __len__(self):
+        return len(self.paths)
+
+    def __getitem__(self, index):
+        img = self.load_image(index)
+        value = self.get_value(self.paths[index])
+
+        if self.transform:
+            return self.transform(img), value
+        else:
+            return img, value
 
 
 def get_dataloaders(batch_size, max_size=None, config_dict=None):
@@ -36,8 +64,7 @@ def get_dataloaders(batch_size, max_size=None, config_dict=None):
 
     data_dir = IMAGE_FOLDER_DIR
 
-    image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x]) for x in ['train', 'val']}
-    class_names = image_datasets['train'].classes
+    image_datasets = {x: ImageFolderCustom(os.path.join(data_dir, x), data_transforms[x]) for x in ['train', 'val']}
 
     if max_size is not None:
         image_datasets['train'] = torch.utils.data.Subset(image_datasets["train"], torch.arange(max_size))
@@ -49,7 +76,7 @@ def get_dataloaders(batch_size, max_size=None, config_dict=None):
 
     dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'val']}
 
-    return dataloaders, dataset_sizes, class_names
+    return dataloaders, dataset_sizes
 
 
 

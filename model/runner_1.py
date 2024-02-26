@@ -6,7 +6,7 @@ config_dict = {
     # "IMAGE_FOLDER_DIR": "/home/stoyelq/Documents/dfobot_data/ant_bees/",
     "NUM_WORKERS": 4,
     "CROP_SIZE": 600,
-    "VAL_CROP_SIZE": 800,
+    "VAL_CROP_SIZE": 600,
     "LEARNING_RATE": 0.01,
     "BATCH_SIZE": 100,
     "PRINT_EVERY": 5,

@@ -14,7 +14,7 @@ IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/image_folder/"
 
 BUFFER_PX = 5
 AREA_THRESHOLD = 0.5
-OUT_DIM = (800, 800)
+OUT_DIM = (1000, 1000)
 TEST_TRAIN_SPLIT = 0.90
 
 def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):

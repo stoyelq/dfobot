@@ -25,11 +25,11 @@ class Solver(object):
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.loss_function = criterion
-        dataloaders, dataset_sizes, class_names = get_dataloaders(batch_size, self.max_data, config_dict=config_dict)
+        self.config_dict = config_dict
+        dataloaders, dataset_sizes = get_dataloaders(batch_size, self.max_data, config_dict=config_dict)
         self.batch_size = batch_size
         self.val_dataloader = dataloaders["val"]
         self.train_dataloader = dataloaders["train"]
-        self.class_names = class_names
         self.dataset_sizes = dataset_sizes
 
         # Unpack keyword arguments
@@ -62,6 +62,8 @@ class Solver(object):
         self.loss_history = []
         self.train_acc_history = []
         self.val_acc_history = []
+        self.train_acc_pm_history = []
+        self.val_acc_pm_history = []
 
     def _step(self):
         """
@@ -74,7 +76,7 @@ class Solver(object):
         labels = labels.to(self.device)
 
         output = self.model(images)
-        loss = self.loss_function(output, labels)
+        loss = self.loss_function(output[:, 0], labels)
         self.optimizer.zero_grad()
         loss.backward()
 
@@ -95,6 +97,8 @@ class Solver(object):
             "loss_history": self.loss_history,
             "train_acc_history": self.train_acc_history,
             "val_acc_history": self.val_acc_history,
+            "train_acc_pm_history": self.train_acc_pm_history,
+            "val_acc_pm_history": self.val_acc_pm_history,
         }
         filename = "%s%s_epoch_%d.pkl" % (self.data_dir, self.checkpoint_name, self.epoch)
         if self.verbose:
@@ -103,7 +107,7 @@ class Solver(object):
             pickle.dump(checkpoint, f)
 
 
-    def check_accuracy(self, dataloader, num_samples):
+    def check_accuracy(self, dataloader, num_samples, window=0):
         """
         Check accuracy of the model on the provided data.
         Inputs:
@@ -130,12 +134,12 @@ class Solver(object):
             labels = labels.to(self.device)
 
             scores = self.model(images)
-            y_pred.append(torch.argmax(scores, dim=1))
+            y_pred.append(scores[:, 0])
             y_true.append(labels)
 
         y_pred = torch.cat(y_pred)
         y_true = torch.cat(y_true)
-        acc = (y_pred == y_true).to(torch.float).mean()
+        acc = ((y_pred - y_true).abs().int() <= window).to(torch.float).mean()
         return acc.item()
 
     def train(self, return_best_params=True):
@@ -182,12 +186,20 @@ class Solver(object):
                 if first_it or last_it or epoch_end:
                     train_acc = \
                         self.check_accuracy(self.train_dataloader,
-                                            num_samples=self.num_train_samples)
+                                            num_samples=self.num_train_samples, window=0)
+                    # train_acc_pm = \
+                    #     self.check_accuracy(self.train_dataloader,
+                    #                         num_samples=self.num_train_samples, window=1)
                     val_acc = \
                         self.check_accuracy(self.val_dataloader,
-                                            num_samples=self.num_val_samples)
+                                            num_samples=self.num_val_samples, window=0)
+                    # val_acc_pm = \
+                    #     self.check_accuracy(self.val_dataloader,
+                    #                         num_samples=self.num_val_samples, window=1)
                     self.train_acc_history.append(train_acc)
+                    # self.train_acc_pm_history.append(train_acc_pm)
                     self.val_acc_history.append(val_acc)
+                    # self.val_acc_pm_history.append(val_acc_pm)
                     self._save_checkpoint()
 
                     if self.verbose and self.epoch % self.print_acc_every == 0:
@@ -195,6 +207,10 @@ class Solver(object):
                             "(Epoch %d / %d) train acc: %f; val_acc: %f"
                             % (self.epoch, self.num_epochs, train_acc, val_acc)
                         )
+                        # print(
+                        #     "(Epoch %d / %d) train acc pm: %f; val_acc pm: %f"
+                        #     % (self.epoch, self.num_epochs, train_acc_pm, val_acc_pm)
+                        # )
 
                     # Keep track of the best model
                     if val_acc > self.best_val_acc:
@@ -240,8 +256,6 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
     for key, value in config_dict.items():
         print(f"{key}: {value}")
 
-    _, _, class_names = get_dataloaders(batch_size=1, config_dict=config_dict)
-
     model_conv = models.resnet50(weights='IMAGENET1K_V2')
     model_conv.to(device)
     # freeze inner layers, if called for:
@@ -250,9 +264,9 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
 
     # swap out final fc layer:
     num_ftrs = model_conv.fc.in_features
-    model_conv.fc = nn.Linear(num_ftrs, len(class_names))
+    model_conv.fc = nn.Linear(num_ftrs, 1) # go to single value
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.MSELoss()
 
     # all params:
     if all_layers:
@@ -287,26 +301,29 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
     if plots:
         make_solver_plots(solver)
     else:
-        make_solver_plots(solver, save_count=save_count)
+        make_solver_plots(solver, device=device, save_count=save_count)
     return solver
 
 
-def make_solver_plots(solver, save_count=None):
+def make_solver_plots(solver, device=None, save_count=None):
     plt.plot(solver.loss_history, 'o')
     window_width = 20
     cumsum_vec = np.cumsum(np.insert(solver.loss_history, 0, 0))
     ma_vec = (cumsum_vec[window_width:] - cumsum_vec[:-window_width]) / window_width
     plt.plot(list(range(0, len(solver.loss_history) - window_width + 1)), ma_vec)
     if save_count:
-        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/loss_{save_count}.png")
+        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/loss_{device.split(':')[-1]}_{save_count}.png")
         plt.clf()
     else:
         plt.show()
 
-    plt.plot(solver.train_acc_history)
-    plt.plot(solver.val_acc_history)
+    plt.plot(solver.train_acc_history, label="train_acc")
+    plt.plot(solver.val_acc_history, label="train_acc_pm")
+    plt.plot(solver.train_acc_pm_history, label="val_acc_pm")
+    plt.plot(solver.val_acc_pm_history, label="val_acc")
+    plt.title(f"Training and validation accuracy with lr: {solver.config_dict['LEARNING_RATE']}, weight decay: {solver.config_dict['WEIGHT_DECAY']}")
     if save_count:
-        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/acc_{save_count}.png")
+        plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/acc_{device.split(':')[-1]}_{save_count}.png")
         plt.clf()
     else:
         plt.show()
