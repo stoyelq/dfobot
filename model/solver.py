@@ -223,30 +223,6 @@ class Solver(object):
             self.model.state_dict = self.best_params
 
 
-    def plot_solver_results(self, num_samples):
-        num_batches = num_samples // self.batch_size
-        if num_samples % self.batch_size != 0:
-            num_batches += 1
-        y_pred = []
-        y_true = []
-        best_model = self.model
-        best_model.state_dict = self.best_params
-
-        for i in range(num_batches):
-            images, labels = next(iter(self.val_dataloader))
-            images = images.to(self.device)
-            labels = labels.to(self.device)
-            scores = self.model(images)
-            y_pred.append(torch.argmax(scores, dim=1))
-            y_true.append(labels)
-
-        y_pred = torch.cat(y_pred)
-        y_true = torch.cat(y_true)
-        plt.scatter(y_true.tolist(), y_pred.tolist())
-        plt.plot([0, 25], [0, 25])
-        plt.show()
-        return
-
 def rand_jitter(arr):
     stdev = .01 * (max(arr) - min(arr))
     return arr + np.random.randn(len(arr)) * stdev
@@ -321,11 +297,31 @@ def make_solver_plots(solver, device=None, save_count=None):
     plt.plot(solver.val_acc_history, label="train_acc_pm")
     plt.plot(solver.train_acc_pm_history, label="val_acc_pm")
     plt.plot(solver.val_acc_pm_history, label="val_acc")
+    plt.legend(loc="upper left")
     plt.title(f"Training and validation accuracy with lr: {solver.config_dict['LEARNING_RATE']}, weight decay: {solver.config_dict['WEIGHT_DECAY']}")
     if save_count:
         plt.savefig(f"/home/stoyelq/Documents/dfobot_data/hyper_search/acc_{device.split(':')[-1]}_{save_count}.png")
         plt.clf()
     else:
         plt.show()
-    if save_count is None:
-        solver.plot_solver_results(100)
+
+def make_bot_plot(bot, num_samples, config_dict, device):
+    dataloaders, _ = get_dataloaders(1, None, config_dict=config_dict)
+    val_dataloader = dataloaders["val"]
+    y_pred = []
+    y_true = []
+
+    for i in range(num_samples):
+        images, labels = next(iter(val_dataloader))
+        images = images.to(device)
+        labels = labels.to(device)
+        scores = bot(images)
+        y_pred.append(scores[0])
+        y_true.append(labels)
+
+    y_pred = torch.cat(y_pred)
+    y_true = torch.cat(y_true)
+    plt.scatter(y_true.tolist(), y_pred.tolist())
+    plt.plot([0, 25], [0, 25])
+    plt.show()
+    return
