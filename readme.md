@@ -1,5 +1,5 @@
 # DFO Bot (Big Otolith Tensor?)
-Deep convulutional network for rapid automated otolith aging
+Deep convolutional network for rapid automated otolith aging
 
 ## Directory strucutre:
 
