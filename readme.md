@@ -12,7 +12,7 @@ Model contains the training and validation workflows for the ML model, as well a
 All the machine learning knowledge required is are covered in lectures 1-12 of this course:
 https://web.eecs.umich.edu/~justincj/teaching/eecs498/WI2022/
 
-This methods used in this code are not anything novel, they closely follow the aproach employed by Moel et al. 2018 and other recent otolith aging work:
+This methods used in this code are not anything novel, they closely follow the aproach employed by Moen et al. 2018 and other recent otolith aging work:
 
 Moen, E., et al. (2018). "Automatic interpretation of otoliths using deep learning." PLoS One 13(12): e0204713.
 
