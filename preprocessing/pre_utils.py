@@ -6,10 +6,11 @@ from torchvision.transforms import v2
 import torch
 import cv2
 
-DATA_DIR = "/home/stoyelq/Documents/dfobot_data/preprocessing/"
-CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles/"
+# DATA_DIR = "/home/stoyelq/Documents/dfobot_data/preprocessing/"
+DATA_DIR = "/home/stoyelq/Documents/dfobot_data/herring/enhanced/"
+# CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles/"
+CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_herring_singles/"
 TEST_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles_test/"
-AUGMENTED_DIR = "/home/stoyelq/Documents/dfobot_data/augmented/"
 IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/image_folder/"
 
 BUFFER_PX = 5
@@ -19,10 +20,10 @@ TEST_TRAIN_SPLIT = 0.90
 
 def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):
     rect = cv2.boundingRect(contour)  # x, y, w, h
-    x1 = rect[0] - buffer
-    y1 = rect[1] - buffer
-    x2 = (rect[0] + rect[2]) + buffer
-    y2 = (rect[1] + rect[3]) + buffer
+    x1 = max(rect[0] - buffer, 0)
+    y1 = max(rect[1] - buffer, 0)
+    x2 = min((rect[0] + rect[2]) + buffer, img.shape[1])
+    y2 = min((rect[1] + rect[3]) + buffer, img.shape[0])
     cropped = img[y1:y2, x1:x2]
     try:
         scaled = cv2.resize(cropped, dsize=outdim)
@@ -33,11 +34,23 @@ def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):
         print("Error {e}. Could not save {out_dir}".format(e=e, out_dir=out_dir))
 
 
-def get_age_from_name(img_name, gt_df):
-    fish_id = img_name.split("photo")[0][:-1].split(" ")[0]
-    fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
+def get_age_from_name(img_name, gt_df, herring=True):
+    if herring:
+        sample_id = img_name.split("-")[1]
+        fish_number = img_name.split("-")[2].split(".")[0]
+        try:
+            fish_number = int(fish_number)
+        except ValueError:
+            fish_number = fish_number
+        fish_id = img_name.split(".")[0][5:]
+        fish_data_row = gt_df[(gt_df["sample_id"] == int(sample_id)) & (gt_df["fish_number"] == fish_number)]
+    else:
+        fish_id = img_name.split("photo")[0][:-1].split(" ")[0]
+        fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
     try:
         fish_age = int(fish_data_row["annulus_count"].iloc[0])
+        if fish_age == -99:
+            return None, None
     except:
         return None, None
     return fish_age, fish_id
@@ -87,7 +100,7 @@ def crop_and_isolate():
 
         file_count = 2 * photo_count - 1
         crop_and_save(img, cnts[0], out_dir=f"{out_dir}{fish_id}__{file_count}.jpg", buffer=BUFFER_PX, outdim=OUT_DIM)
-        cv2.drawContours(img, [cnts[0]], -1, (36, 255, 12), 3)
+        #cv2.drawContours(img, [cnts[0]], -1, (36, 255, 12), 3)
 
         # grab second otolith if area is closish:
         first_area = cv2.contourArea(cnts[0])
@@ -104,7 +117,12 @@ def crop_and_isolate():
         # cv2.destroyAllWindows()
 
 
-def load_dmapps_report():
-    gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
+def load_dmapps_report(herring=True):
+    if herring:
+        gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/2019_herring_GT.csv")
+    else:
+        gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
     gt_df = pd.read_csv(gt_file)
     return gt_df
+
+crop_and_isolate()
