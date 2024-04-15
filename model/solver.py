@@ -1,5 +1,6 @@
 import os
 import pickle
+import random
 import time
 
 import numpy as np
@@ -9,9 +10,6 @@ from torch import nn, optim, distributed
 from torchvision import models
 
 from model.model_utils import get_dataloaders
-
-
-
 
 """
 SHAMELESSLY copied and modified from the eecs-498-007 assignment code.
@@ -89,6 +87,10 @@ class Solver(object):
             return
         checkpoint = {
             "model": self.model,
+            "config_dict": self.config_dict,
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "loss": self.loss_history[-1],
             "batch_size": self.batch_size,
             "best_params": self.best_params,
             "num_train_samples": self.num_train_samples,
@@ -100,11 +102,11 @@ class Solver(object):
             "train_acc_pm_history": self.train_acc_pm_history,
             "val_acc_pm_history": self.val_acc_pm_history,
         }
-        filename = "%s%s_epoch_%d.pkl" % (self.data_dir, self.checkpoint_name, self.epoch)
+        filename = "%s%sepoch_%d.pkl" % (self.data_dir, self.checkpoint_name, self.epoch)
         if self.verbose:
             print('Saving checkpoint to "%s"' % filename)
         with open(filename, "wb") as f:
-            pickle.dump(checkpoint, f)
+            torch.save(checkpoint, f)
 
 
     def check_accuracy(self, dataloader, num_samples, window=0):
@@ -228,7 +230,7 @@ def rand_jitter(arr):
     return arr + np.random.randn(len(arr)) * stdev
 
 
-def run_solver(device, plots=False, all_layers=False, config_dict=None, save_count=None):
+def run_solver(device, plots=False, all_layers=False, config_dict=None, save_count=None, load_checkpoint=None):
     for key, value in config_dict.items():
         print(f"{key}: {value}")
 
@@ -244,6 +246,12 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
 
     criterion = nn.MSELoss()
 
+    if load_checkpoint is not None:
+        checkpoint = torch.load(load_checkpoint, map_location=torch.device(device))
+        model_conv.load_state_dict(checkpoint['model_state_dict'])
+        model_conv.eval()
+        model_conv.to(device)
+
     # all params:
     if all_layers:
         optimizer_ft = optim.Adam(model_conv.parameters(),
@@ -254,6 +262,11 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
         optimizer_ft = optim.Adam(model_conv.fc.parameters(),
                                   lr=config_dict["LEARNING_RATE"],
                                   weight_decay=config_dict["WEIGHT_DECAY"])
+
+    if load_checkpoint is not None:
+        optimizer_ft.load_state_dict(checkpoint['optimizer_state_dict'])
+
+
 
     solver = Solver(model_conv,
                     batch_size=config_dict["BATCH_SIZE"],
@@ -266,6 +279,7 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
                     num_train_samples=config_dict["ACC_SAMPLES"],
                     num_val_samples=config_dict["ACC_VAL_SAMPLES"],
                     device=device,
+                    checkpoint_name="gpu_{}/".format(device[-1]),
                     )
 
     solver.train(return_best_params=False)
@@ -310,18 +324,22 @@ def make_bot_plot(bot, num_samples, config_dict, device):
     val_dataloader = dataloaders["val"]
     y_pred = []
     y_true = []
-
-    for i in range(num_samples):
-        images, labels = next(iter(val_dataloader))
-        images = images.to(device)
-        labels = labels.to(device)
-        scores = bot(images)
-        y_pred.append(scores[0])
-        y_true.append(labels)
+    bot.eval()
+    with torch.no_grad():
+        for i in range(num_samples):
+            images, labels = next(iter(val_dataloader))
+            images = images.to(device)
+            labels = labels.to(device)
+            scores = bot(images)
+            scores = scores.detach().cpu()
+            y_pred.append(scores[0])
+            y_true.append(labels + random.random() / 5)
+            torch.cuda.empty_cache()
 
     y_pred = torch.cat(y_pred)
     y_true = torch.cat(y_true)
     plt.scatter(y_true.tolist(), y_pred.tolist())
     plt.plot([0, 25], [0, 25])
     plt.show()
-    return
+
+    return y_pred, y_true

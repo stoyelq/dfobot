@@ -1,11 +1,12 @@
 
 from solver import run_solver, make_solver_plots, make_bot_plot
 import torch
+import gc
 
 # solver_name = "hyper_search/model_solver_1_7.pt"
 solver_name = "model_solver_0.pt"
 solver = torch.load(f'/home/stoyelq/Documents/dfobot_data/{solver_name}')
-
+#
 bot_name = "dfobot.pt"
 bot = torch.load(f'/home/stoyelq/Documents/dfobot_data/{bot_name}')
 device = "cuda:0"
@@ -28,4 +29,6 @@ if False:
 #
 # print(solver.best_val_acc)
 # make_solver_plots(solver)
-make_bot_plot(bot, 70, solver.config_dict, device)
+y_pred_all = []
+y_true_all = []
+y_pred, y_true = make_bot_plot(bot, 500, solver.config_dict, device)

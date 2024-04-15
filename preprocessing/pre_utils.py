@@ -6,10 +6,10 @@ from torchvision.transforms import v2
 import torch
 import cv2
 
-# DATA_DIR = "/home/stoyelq/Documents/dfobot_data/preprocessing/"
-DATA_DIR = "/home/stoyelq/Documents/dfobot_data/herring/enhanced/"
-# CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles/"
-CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_herring_singles/"
+DATA_DIR = "/home/stoyelq/Documents/dfobot_data/plaice/"
+# DATA_DIR = "/home/stoyelq/Documents/dfobot_data/herring/enhanced/"
+CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles/"
+# CROP_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_herring_singles/"
 TEST_DIR = "/home/stoyelq/Documents/dfobot_data/cropped_singles_test/"
 IMAGE_FOLDER_DIR = "/home/stoyelq/Documents/dfobot_data/image_folder/"
 
@@ -34,10 +34,14 @@ def crop_and_save(img, contour, out_dir, buffer=5, outdim=(256, 256)):
         print("Error {e}. Could not save {out_dir}".format(e=e, out_dir=out_dir))
 
 
-def get_age_from_name(img_name, gt_df, herring=True):
+def get_age_from_name(img_name, gt_df, herring=False):
     if herring:
-        sample_id = img_name.split("-")[1]
-        fish_number = img_name.split("-")[2].split(".")[0]
+        try:
+            sample_id = img_name.split("-")[1]
+            fish_number = img_name.split("-")[2].split(".")[0]
+        except Exception as e:
+            print(img_name)
+            raise Exception(e)
         try:
             fish_number = int(fish_number)
         except ValueError:
@@ -64,10 +68,6 @@ def crop_and_isolate():
 
     for img_name in img_list:
         count += -1
-        if count == 652:
-            # that otolith touches edge of image and breaks things, ignore : )
-            print(img_name)
-            continue
         if count % 100 == 0:
             print(count)
         if count < TEST_TRAIN_SPLIT * len(img_list):
@@ -117,11 +117,11 @@ def crop_and_isolate():
         # cv2.destroyAllWindows()
 
 
-def load_dmapps_report(herring=True):
+def load_dmapps_report(herring=False):
     if herring:
         gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/2019_herring_GT.csv")
     else:
-        gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/GT_metadata.csv")
+        gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/2022_RV_GT.csv")
     gt_df = pd.read_csv(gt_file)
     return gt_df
 
