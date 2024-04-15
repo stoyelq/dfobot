@@ -7,6 +7,9 @@ Two main directories `preprocessing` and `model`.  Preprocessing is used to stan
 
 Model contains the training and validation workflows for the ML model, as well as various helpers for running the scripts and performing the hyperparameter search.  
 
+## Installation:
+On Ubuntu need to install latest nvidia drivers (or whatever is suitable for the graphics card): `sudo apt install nvidia-driver-???` and a `pip install -r requirements.txt`
+
 
 ## References:
 All the machine learning knowledge required is are covered in lectures 1-12 of this course:
