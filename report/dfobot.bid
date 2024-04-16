@@ -1,0 +1,64 @@
+@article{moen-2018,
+   author = {Moen, E. and Handegard, N. O. and Allken, V. and Albert, O. T. and Harbitz, A. and Malde, K.},
+   title = {Automatic interpretation of otoliths using deep learning},
+   journal = {PLoS One},
+   volume = {13},
+   number = {12},
+   pages = {e0204713},
+   note = {Early ML Otolith work, used InceptionV3, fine tuned it.},
+   abstract = {The age structure of a fish population has important implications for recruitment processes and population fluctuations, and is a key input to fisheries-assessment models. The current method of determining age structure relies on manually reading age from otoliths, and the process is labor intensive and dependent on specialist expertise. Recent advances in machine learning have provided methods that have been remarkably successful in a variety of settings, with potential to automate analysis that previously required manual curation. Machine learning models have previously been successfully applied to object recognition and similar image analysis tasks. Here we investigate whether deep learning models can also be used for estimating the age of otoliths from images. We adapt a pre-trained convolutional neural network designed for object recognition, to estimate the age of fish from otolith images. The model is trained and validated on a large collection of images of Greenland halibut otoliths. We show that the model works well, and that its precision is comparable to documented precision obtained by human experts. Automating this analysis may help to improve consistency, lower cost, and increase the extent of age estimation. Given that adequate data are available, this method could also be used to estimate age of other species using images of otoliths or fish scales.},
+   keywords = {Animals
+Flounder/*anatomy & histology
+*Image Processing, Computer-Assisted
+*Machine Learning
+*Models, Theoretical
+*Neural Networks, Computer
+Otolithic Membrane/*anatomy & histology},
+   ISSN = {1932-6203 (Electronic)
+1932-6203 (Linking)},
+   DOI = {10.1371/journal.pone.0204713},
+   url = {https://www.ncbi.nlm.nih.gov/pubmed/30557335},
+   year = {2018},
+   type = {Journal Article}
+}
+
+@article{polacek-2023,
+   author = {Poláček, Miroslav and Arizpe, Alexis and Hüther, Patrick and Weidlich, Lisa and Steindl, Sonja and Swarts, Kelly},
+   title = {Automation of tree‐ring detection and measurements using deep learning},
+   journal = {Methods in Ecology and Evolution},
+   volume = {14},
+   number = {9},
+   pages = {2233-2242},
+   note = {Did trees yo!},
+   ISSN = {2041-210X
+2041-210X},
+   DOI = {10.1111/2041-210x.14183},
+   year = {2023},
+   type = {Journal Article}
+}
+
+@article{politikos-2021,
+   author = {Politikos, Dimitris V. and Petasis, Georgios and Chatzispyrou, Archontia and Mytilineou, Chryssi and Anastasopoulou, Aikaterini},
+   title = {Automating fish age estimation combining otolith images and deep learning: The role of multitask learning},
+   journal = {Fisheries Research},
+   volume = {242},
+   note = {5000 image training set, 6 classes, 64% accuracy. ImageNet base, predicted both age and length (Multitask learning) which improved accuracy to 70%},
+   ISSN = {01657836},
+   DOI = {10.1016/j.fishres.2021.106033},
+   year = {2021},
+   type = {Journal Article}
+}
+
+@article{sigurdardottir-2023,
+   author = {Sigurðardóttir, Andrea Rakel and Sverrisson, Þór and Jónsdóttir, Aðalbjörg and Gudjónsdóttir, María and Elvarsson, Bjarki Þór and Einarsson, Hafsteinn},
+   title = {Otolith age determination with a simple computer vision based few-shot learning method},
+   journal = {Ecological Informatics},
+   volume = {76},
+   note = {Did few-shot (~1000 images) approach using CLIP, compared to ResNet, InceptionV3, etc.  GOt ~55% accuracy, 97% accuray +/- 1 year},
+   ISSN = {15749541},
+   DOI = {10.1016/j.ecoinf.2023.102046},
+   year = {2023},
+   type = {Journal Article}
+}
+
+
