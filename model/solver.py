@@ -323,6 +323,7 @@ def make_bot_plot(bot, num_samples, config_dict, device):
     dataloaders, _ = get_dataloaders(1, None, config_dict=config_dict)
     val_dataloader = dataloaders["val"]
     y_pred = []
+    y_true_noised = []
     y_true = []
     bot.eval()
     with torch.no_grad():
@@ -333,12 +334,14 @@ def make_bot_plot(bot, num_samples, config_dict, device):
             scores = bot(images)
             scores = scores.detach().cpu()
             y_pred.append(scores[0])
-            y_true.append(labels + random.random() / 5)
+            y_true.append(labels)
+            y_true_noised.append(labels + random.random() / 5)
             torch.cuda.empty_cache()
 
     y_pred = torch.cat(y_pred)
     y_true = torch.cat(y_true)
-    plt.scatter(y_true.tolist(), y_pred.tolist())
+    y_true_noised = torch.cat(y_true_noised)
+    plt.scatter(y_true_noised.tolist(), y_pred.tolist())
     plt.plot([0, 25], [0, 25])
     plt.show()
 

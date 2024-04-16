@@ -2,20 +2,20 @@ from solver import run_solver
 
 dev_count = 1
 device = f"cuda:{dev_count}"
-learning_rates = [5e-5, 5e-4, 5e-3]
-weight_decays = [0.001, 0.005, 0.01, 0.05]
+learning_rates = [1e-6]
+weight_decays = [0, 1e-7, 5e-7, 1e-6, 5e-6]
 crop_sizes = [600]
 config_dict = {
     "IMAGE_FOLDER_DIR": "/home/stoyelq/Documents/dfobot_data/image_folder/",
     # "IMAGE_FOLDER_DIR": "/home/stoyelq/Documents/dfobot_data/small_image_folder/",
     "NUM_WORKERS": 4,
-    "VAL_CROP_SIZE": 800,
+    "VAL_CROP_SIZE": 600,
     "BATCH_SIZE": 20,
-    "PRINT_EVERY": 20,
+    "PRINT_EVERY": 100,
     "MAX_DATA": None, # 150,
     "NUM_EPOCHS": 5,
-    "ACC_SAMPLES": 200,
-    "ACC_VAL_SAMPLES": 200,
+    "ACC_SAMPLES": 100,
+    "ACC_VAL_SAMPLES": 100,
 }
 
 iter_count = 0
