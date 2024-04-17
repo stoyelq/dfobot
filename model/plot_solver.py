@@ -6,9 +6,11 @@ import gc
 # solver_name = "hyper_search/model_solver_1_7.pt"
 solver_name = "model_solver_0.pt"
 solver = torch.load(f'/home/stoyelq/Documents/dfobot_data/{solver_name}')
+bot = solver.model
+bot.state_dict = solver.best_params
 #
-bot_name = "dfobot.pt"
-bot = torch.load(f'/home/stoyelq/Documents/dfobot_data/{bot_name}')
+# bot_name = "dfobot.pt"
+# bot = torch.load(f'/home/stoyelq/Documents/dfobot_data/{bot_name}')
 device = "cuda:0"
 bot.to(device)
 # save dfobot:

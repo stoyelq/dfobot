@@ -51,7 +51,7 @@ def get_data_from_name(img_name, gt_df, herring):
         except ValueError:
             fish_number = fish_number
         fish_id = img_name.split(".")[0][5:]
-        fish_data_row = gt_df[(gt_df["sample_id"] == int(sample_id)) & (gt_df["fish_number"] == fish_number)]
+        fish_data_row = gt_df[(gt_df["sample_id"] == int(sample_id)) & (gt_df["fish_number"] == str(fish_number))]
     else:
         fish_id = img_name.split("photo")[0][:-1].split(" ")[0]
         fish_data_row = gt_df[gt_df["specimen_identifier"] == fish_id]
@@ -62,8 +62,8 @@ def get_data_from_name(img_name, gt_df, herring):
     except:
         return None, None, None
 
-    length = fish_data_row["length_mm"].iloc[0] / 1000
-    weight = fish_data_row["weight_g"].iloc[0] / 1000
+    length = float(fish_data_row["length_mm"].iloc[0]) / 1000
+    weight = float(fish_data_row["weight_g"].iloc[0]) / 1000
     month = float(fish_data_row["collection_date"].iloc[0][6:7]) / 12
     is_male = 1 if fish_data_row["sex"].iloc[0].lower() == "male" else 0
     is_female = 1 if fish_data_row["sex"].iloc[0].lower() == "female" else 0
@@ -146,8 +146,8 @@ def load_dmapps_report(herring):
         gt_file = os.path.join("/home/stoyelq/Documents/dfobot_data/2022_RV_GT.csv")
     gt_df = pd.read_csv(gt_file)
     return gt_df
-
-DATA_DIR = "/home/stoyelq/Documents/dfobot_data/plaice/"
-crop_and_isolate(herring=False)
+#
+# DATA_DIR = "/home/stoyelq/Documents/dfobot_data/plaice/"
+# crop_and_isolate(herring=False)
 DATA_DIR = "/home/stoyelq/Documents/dfobot_data/herring/enhanced/"
 crop_and_isolate(herring=True)

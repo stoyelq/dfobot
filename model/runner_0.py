@@ -10,12 +10,12 @@ config_dict = {
     "BATCH_SIZE": 20,
     "PRINT_EVERY": 25,
     "MAX_DATA": None, # 150,
-    "NUM_EPOCHS": 25,
-    "WEIGHT_DECAY": 1e-7,
-    "ACC_SAMPLES": 100,
-    "ACC_VAL_SAMPLES": 100,
+    "NUM_EPOCHS": 10,
+    "WEIGHT_DECAY": 0,
+    "ACC_SAMPLES": 1000,
+    "ACC_VAL_SAMPLES": 1000,
 }
 
-run_solver(device="cuda:0", plots=True, all_layers=True, save_count=7-1, config_dict=config_dict,
-           load_checkpoint="/home/stoyelq/Documents/dfobot_data/gpu_0/epoch_18.pkl")
+run_solver(device="cuda:0", plots=True, all_layers=True, save_count=7-2, config_dict=config_dict,
+           load_checkpoint="/home/stoyelq/Documents/dfobot_data/gpu_0/run_7-1/epoch_25.pkl")
 

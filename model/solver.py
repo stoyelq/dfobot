@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from torch import nn, optim, distributed
 from torchvision import models
 
-from model.model_utils import get_dataloaders
+from model.model_utils import get_dataloaders, get_base_model, get_augmented_model
 
 """
 SHAMELESSLY copied and modified from the eecs-498-007 assignment code.
@@ -69,11 +69,13 @@ class Solver(object):
         be called manually.
         """
         # Make a minibatch of training data,
-        images, labels = next(iter(self.train_dataloader))
+        images, data, labels = next(iter(self.train_dataloader))
         images = images.to(self.device)
+        data = data.to(self.device)
         labels = labels.to(self.device)
 
-        output = self.model(images)
+        output = self.model(images, data)
+
         loss = self.loss_function(output[:, 0], labels)
         self.optimizer.zero_grad()
         loss.backward()
@@ -131,11 +133,12 @@ class Solver(object):
         y_pred = []
         y_true = []
         for i in range(num_batches):
-            images, labels = next(iter(dataloader))
+            images, data, labels = next(iter(dataloader))
             images = images.to(self.device)
+            data = data.to(self.device)
             labels = labels.to(self.device)
 
-            scores = self.model(images)
+            scores = self.model(images, data)
             y_pred.append(scores[:, 0])
             y_true.append(labels)
 
@@ -234,18 +237,10 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
     for key, value in config_dict.items():
         print(f"{key}: {value}")
 
-    model_conv = models.resnet50(weights='IMAGENET1K_V2')
-    model_conv.to(device)
-    # freeze inner layers, if called for:
-    for param in model_conv.parameters():
-       param.requires_grad = all_layers
-
-    # swap out final fc layer:
-    num_ftrs = model_conv.fc.in_features
-    model_conv.fc = nn.Linear(num_ftrs, 1) # go to single value
-
+    # model_conv = get_base_model(device, all_layers)
+    model_conv = get_augmented_model(device, all_layers)
     criterion = nn.MSELoss()
-
+    checkpoint = None
     if load_checkpoint is not None:
         checkpoint = torch.load(load_checkpoint, map_location=torch.device(device))
         model_conv.load_state_dict(checkpoint['model_state_dict'])
@@ -259,14 +254,12 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
                                   weight_decay=config_dict["WEIGHT_DECAY"])
     # just fc layer
     else:
-        optimizer_ft = optim.Adam(model_conv.fc.parameters(),
+        optimizer_ft = optim.Adam(model_conv.cnn.fc.parameters(),
                                   lr=config_dict["LEARNING_RATE"],
                                   weight_decay=config_dict["WEIGHT_DECAY"])
 
-    if load_checkpoint is not None:
+    if checkpoint is not None:
         optimizer_ft.load_state_dict(checkpoint['optimizer_state_dict'])
-
-
 
     solver = Solver(model_conv,
                     batch_size=config_dict["BATCH_SIZE"],
@@ -328,10 +321,11 @@ def make_bot_plot(bot, num_samples, config_dict, device):
     bot.eval()
     with torch.no_grad():
         for i in range(num_samples):
-            images, labels = next(iter(val_dataloader))
+            images, data, labels = next(iter(val_dataloader))
             images = images.to(device)
+            data = data.to(device)
             labels = labels.to(device)
-            scores = bot(images)
+            scores = bot(images, data)
             scores = scores.detach().cpu()
             y_pred.append(scores[0])
             y_true.append(labels)

@@ -14,8 +14,8 @@ config_dict = {
     "PRINT_EVERY": 100,
     "MAX_DATA": None, # 150,
     "NUM_EPOCHS": 5,
-    "ACC_SAMPLES": 100,
-    "ACC_VAL_SAMPLES": 100,
+    "ACC_SAMPLES": 1000,
+    "ACC_VAL_SAMPLES": 1000,
 }
 
 iter_count = 0
