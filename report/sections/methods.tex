@@ -1,0 +1,15 @@
+
+
+Otolith images were captured during age estimation programs conducted byt the Gulf Region of Fisheries and Oceans Canada. The species examined in the current document are American Plaice (\emph{Hippoglossoides platessoides}), Yellowtail Flounder (\emph{Myzopsetta ferruginea}), Winter Flounder (\emph{Pseudopleuronectes americanus}), Atlantic Cod (\emph{Gadus morhua}), White Hake (\emph{Urophycis tenuis}) and Atlantic Herring (\emph{Clupea harengus}).
+
+A convolutional neural network (ResNet50) is used as the main engine for the machine learning. The implementation of the neural network is done in the Pythion programming language using the ResNet50 capabilities of the TensorFlow package.
+
+Otolith images are first processed to make them suitable as inputs to the neural network.
+
+The first step is to train the neural network using a subset of the available images.
+
+The second step is to use the neural network with another set of images to predict age estimates for each sample.
+
+Comparison of age estimates determined by trained fisheries technicians to those obtained from the neural network are done by computing the percent agreement of age estimates, the coefficient of variation of the predicted and observed estimates and by generating bias plots.
+
+

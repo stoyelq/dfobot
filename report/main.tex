@@ -1,90 +1,34 @@
-\documentclass[12pt]{report}
+\documentclass[12pt]{article}
 \usepackage{graphicx}
-\graphicspath{{Images/}}
-\usepackage{textcomp} %for the copywrite symbol
-\linespread{1.6} %sets lines to 1.5 spacing.  1.6 would be double spaced
-\usepackage[margin=1.0in]{geometry}
-\usepackage[semicolon,round,sort&compress,sectionbib,numbers]{natbib}  
-\usepackage{chapterbib}  
-\usepackage{amsmath}
-\usepackage{subcaption}
-\usepackage{appendix} %for appendices
-\usepackage{float}
+\usepackage{aecompl}
 
-
-
-\usepackage{hyperref} %make stuff clickable
-\hypersetup{
-	colorlinks,
-	citecolor=black,
-	filecolor=black,
-	linkcolor=black,
-	urlcolor=black
-}
-
- 
 \begin{document}
 
 \input{Additional_files/title_page.tex}
 
-\renewcommand{\thepage}{\roman{page}}% Roman numerals for page counter
- 
-\addcontentsline{toc}{section}{Table of Contents}
-\tableofcontents
+\section*{Abstract}
 
 
+\section{Introduction}
+\input{sections/intro.tex}
 
+\section{Methods}
+\input{sections/methods.tex}
 
-
-\chapter*{Abstract}
-
-\addcontentsline{toc}{section}{Abstract}
-
-
-\\
-\chapter*{Abr\'eg\'e}
-\addcontentsline{toc}{section}{Abr\'eg\'e}
-\input{additional_files/french_abstract.tex}
-
-
-\chapter*{Acknowledgements}
-\addcontentsline{toc}{section}{Acknowledgements}
-
-
-
-\chapter{Introduction}
-\renewcommand{\thepage}{\arabic{page}}% Arabic numerals for page counter
-\setcounter{page}{1}% sets page number
-
-\input{sections/introduction.tex}
-
-
-\chapter{Literature Review}\label{literature_review}
-\input{sections/background.tex}
-
-\chapter{Methods}\label{methods}
-\input{sections/method.tex}
-\chapter{Results and Discussion}\label{results}
+\section{Results}
 \input{sections/results.tex}
-\chapter{Discussion}\label{discussion}
+
+\section{Discussion}
 \input{sections/discussion.tex}
 
-\chapter{Conclusion}\label{conclusion}
+\section{Conclusion}
 \input{sections/conclusion.tex}
-
-\begin{appendices}
-
-\chapter{Calculation Details} \label{calc_details}
-
-\input{additional_files/calculation_details.tex}
-
-\end{appendices}
 
 
 \newpage
 \bibliographystyle{unsrt}
 
-
 \bibliography{dfobot}
 
 \end{document}
+
