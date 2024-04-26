@@ -1,6 +1,8 @@
 
 
-Otolith images were captured during age estimation programs conducted byt the Gulf Region of Fisheries and Oceans Canada. The species examined in the current document are American Plaice (\emph{Hippoglossoides platessoides}), Yellowtail Flounder (\emph{Myzopsetta ferruginea}), Winter Flounder (\emph{Pseudopleuronectes americanus}), Atlantic Cod (\emph{Gadus morhua}), White Hake (\emph{Urophycis tenuis}) and Atlantic Herring (\emph{Clupea harengus}).
+Otolith images were captured during age estimation programs conducted byt the Gulf Region of Fisheries and Oceans Canada. The six species examined in the current document are American Plaice (\emph{Hippoglossoides platessoides}), Yellowtail Flounder (\emph{Myzopsetta ferruginea}), Winter Flounder (\emph{Pseudopleuronectes americanus}), Atlantic Cod (\emph{Gadus morhua}), White Hake (\emph{Urophycis tenuis}) and Atlantic Herring (\emph{Clupea harengus}).
+
+Otolith images are captured from a Leica S9i microscope equipped with a digital camera. To minimise glare and improve contrast, image capture is done using diffuse indirect light on a dark background. The preparation methods differ by species, some otoliths are photographed whole while other are sectioned after being embeded in a two-part epoxy resin. Example of photos from the different species appear in Figure \ref{fig:example-images}.
 
 A convolutional neural network (ResNet50) is used as the main engine for the machine learning. The implementation of the neural network is done in the Pythion programming language using the ResNet50 capabilities of the TensorFlow package.
 
@@ -11,5 +13,17 @@ The first step is to train the neural network using a subset of the available im
 The second step is to use the neural network with another set of images to predict age estimates for each sample.
 
 Comparison of age estimates determined by trained fisheries technicians to those obtained from the neural network are done by computing the percent agreement of age estimates, the coefficient of variation of the predicted and observed estimates and by generating bias plots.
+
+Figure \ref{fig:pipeline} shows the steps to go from otolith images to predicted ages.
+
+\begin{figure}\label{fig:example-images}
+\includegraphics{figures/temp.png}
+\caption{Examples digitial images from the six species examined.}
+\end{figure}
+
+\begin{figure}\label{fig:pipeline}
+\includegraphics{figures/pipeline-diagram-figure.png}
+\caption{Diagram of the analytical pipeline used.}
+\end{figure}
 
 

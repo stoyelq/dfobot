@@ -1,3 +1,10 @@
+token.txt
+
+report/*.aux
+report/*.bbl
+report/*.blg
+report/*.toc
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

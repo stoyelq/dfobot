@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="297mm"
+   height="210mm"
+   viewBox="0 0 297 210"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="pipeline-diagram-figure.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#999999"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.69575617"
+     inkscape:cx="528.20228"
+     inkscape:cy="482.9278"
+     inkscape:window-width="1850"
+     inkscape:window-height="953"
+     inkscape:window-x="70"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="106.3591"
+       y="845.12366"
+       width="468.55496"
+       height="123.60652"
+       id="rect4605" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.155992;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect31"
+       width="41.138584"
+       height="9.1949158"
+       x="5.4799943"
+       y="3.1983135" />
+    <ellipse
+       style="fill:none;stroke:#000000;stroke-width:1.32306;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path1633"
+       cx="149.83096"
+       cy="61.035221"
+       rx="72.65477"
+       ry="30.633646" />
+    <text
+       xml:space="preserve"
+       transform="matrix(0.26458333,0,0,0.26458333,166.94367,-199.64788)"
+       id="text4603"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect4605);fill:#000000;fill-opacity:1;stroke:none"><tspan
+         x="106.35938"
+         y="880.51367"
+         id="tspan16343">CNN</tspan></text>
+    <rect
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.240131;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect13300"
+       width="32.307968"
+       height="27.744579"
+       x="175.1277"
+       y="92.986877" />
+    <rect
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.30806;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect13300-4"
+       width="41.366798"
+       height="35.662567"
+       x="240.37997"
+       y="160.3307" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 74.154929,17.873239 H 92.028168 V 34.985916"
+       id="path13364"
+       inkscape:connector-type="orthogonal"
+       inkscape:connector-curvature="0" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="7.6056318"
+       y="9.5070429"
+       id="text14818"><tspan
+         sodipodi:role="line"
+         id="tspan14816"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.264583"
+         x="7.6056318"
+         y="9.5070429">image capture</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:4.93889px;line-height:1.25;font-family:sans-serif;-inkscape-font-specification:'sans-serif, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="234.09668"
+       y="143.20761"
+       id="text14818-5"><tspan
+         sodipodi:role="line"
+         id="tspan16325"
+         x="234.09668"
+         y="143.20761">goodness-of-fit</tspan></text>
+  </g>
+</svg>
