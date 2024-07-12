@@ -13,8 +13,7 @@ import torch
 
 
 METADATA_CSV_PATH = "/home/stoyelq/Documents/dfobot_data/metadata/metadata.csv"
-METADATA_COLUMNS = ['age', 'length', 'weight', 'month', 'is_male',
-       'is_female', 'is_unknown', 'is_plaice', 'is_herring']
+METADATA_COLUMNS = ['month', 'is_male', 'is_female', 'is_unknown', 'is_plaice', 'is_herring']
 
 class ImageFolderCustom(Dataset):
     def __init__(self, targ_dir, transform=None):
@@ -126,8 +125,8 @@ class BaseModel(nn.Module):
 
 
 class AugmentedModel(nn.Module):
-    cnn_out_size = 50
-    hidden_layer_size = 50
+    cnn_out_size = 25
+    hidden_layer_size = 25
     meta_data_length = len(METADATA_COLUMNS)
 
     def __init__(self, all_layers):
