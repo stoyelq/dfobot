@@ -240,6 +240,7 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
     # model_conv = get_base_model(device, all_layers)
     model_conv = get_augmented_model(device, all_layers)
     criterion = nn.MSELoss()
+
     checkpoint = None
     if load_checkpoint is not None:
         checkpoint = torch.load(load_checkpoint, map_location=torch.device(device))
@@ -247,7 +248,7 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
         model_conv.eval()
         model_conv.to(device)
 
-    # all params:
+    # should all params in the model be trainable?  or should the CNN be fixed and just the ones in the fully connected layers?:
     if all_layers:
         optimizer_ft = optim.Adam(model_conv.parameters(),
                                   lr=config_dict["LEARNING_RATE"],
@@ -274,8 +275,8 @@ def run_solver(device, plots=False, all_layers=False, config_dict=None, save_cou
                     device=device,
                     checkpoint_name="gpu_{}/".format(device[-1]),
                     )
-
     solver.train(return_best_params=False)
+
     if save_count:
         torch.save(solver, f"/home/stoyelq/Documents/dfobot_data/hyper_search/model_solver_{device.split(':')[-1]}_{save_count}.pt")
     else:
